@@ -60,3 +60,4 @@
 307 auto ioctl rw defrag
 308 auto ioctl rw prealloc quick defrag
 309 auto quick dir
+310 auto ioctl quick

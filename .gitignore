@@ -182,6 +182,7 @@
 /src/idmapped-mounts/mount-idmapped
 /src/log-writes/replay-log
 /src/perf/*.pyc
+/src/checkpoint_journal
 
 # Symlinked files
 /tests/generic/035.out
