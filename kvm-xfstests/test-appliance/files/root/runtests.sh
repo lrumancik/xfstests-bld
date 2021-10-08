@@ -37,6 +37,23 @@ function copy_xunit_results()
     fi
 }
 
+# arg1: device to check (ie "$SM_TST_DEV")
+# checks all possible users of disks
+# echos 1 if dev is free, 0 otherwise
+function is_dev_free() {
+	for dev in "$TEST_DEV" \
+		   "$SCRATCH_DEV" \
+		   "$SCRATCH_LOGDEV" \
+		   "$LOGWRITES_DEV" \
+		   "$SCRATCH_RTDEV"
+	do
+		if test "$dev" == "$1" ; then
+			return 1
+		fi
+	done
+	return 0
+}
+
 while [ "$1" != "" ]; do
     case $1 in
 	--run-once)
@@ -277,6 +294,9 @@ do
 		fi
 	    fi
 	fi
+
+	echo "TEST_DEV=" "$TEST_DEV"
+
 	if test -z "$SCRATCH_DEV" ; then
 	    if test "$SIZE" = "large" ; then
 		export SCRATCH_DEV=$LG_SCR_DEV
@@ -288,7 +308,11 @@ do
 		export LOGWRITES_DEV=$LG_SCR_DEV
 	    fi
 	fi
-	if test -z "$SCRATCH_LOGDEV" -a -n "$USE_EXTERNAL"; then
+
+	echo "SCRATCH_DEV=" "$SCRATCH_DEV"
+
+	if test "$SCRATCH_LOGDEV" = "/dev/XXX" ; then
+	    export USE_EXTERNAL=yes
 	    if test "$TEST_DEV" != "$SM_TST_DEV" ; then
 		export SCRATCH_LOGDEV="$SM_TST_DEV"
 	    elif test "$SCRATCH_DEV" != "$SM_SCR_DEV" ; then
@@ -297,6 +321,27 @@ do
 		export SCRATCH_LOGDEV="$LG_SCR_DEV"
 	    fi
 	fi
+
+	echo "SCRATCH_LOGDEV=" "$SCRATCH_LOGDEV"
+
+	if test "$SCRATCH_RTDEV" = "/dev/XXX" ; then
+	    export USE_EXTERNAL=yes
+	    if is_dev_free "$SM_SCR_DEV" ; then
+		export SCRATCH_RTDEV="$SM_SCR_DEV"
+	    elif is_dev_free "$LG_SCR_DEV" ; then
+		export SCRATCH_RTDEV="$LG_SCR_DEV"
+	    elif is_dev_free "$SM_TST_DEV" ; then
+		export SCRATCH_RTDEV="$SM_TST_DEV"
+	    elif is_dev_free "$LG_TST_DEV"; then
+		export SCRATCH_RTDEV="$LG_TST_DEV"
+	    elif is_dev_free "$PRI_TST_DEV" ; then
+		export SCRATCH_RTDEV="$PRI_TST_DEV"
+	    else
+		echo "WARNING: no available disk for SCRATCH_RTDEV"
+	    fi
+	fi
+
+	echo "SCRATCH_RTDEV=" $SCRATCH_RTDEV
 
 	# This is required in case of BTRFS uses SCRATCH_DEV_POOL
 	if [[ -n $SCRATCH_DEV_POOL ]]; then
@@ -355,6 +400,7 @@ do
 	echo SCRATCH_DEV: $SCRATCH_DEV >> "$RESULT_BASE/config"
 	echo SCRATCH_MNT: $SCRATCH_MNT >> "$RESULT_BASE/config"
 	echo SCRATCH_LOGDEV: $SCRATCH_LOGDEV >> "$RESULT_BASE/config"
+	echo SCRATCH_RTDEV: $SCRATCH_RTDEV >> "$RESULT_BASE/config"
 	show_mkfs_opts >> "$RESULT_BASE/config"
 	show_mount_opts >> "$RESULT_BASE/config"
 	if test "$TEST_DEV" != "$PRI_TST_DEV" ; then
