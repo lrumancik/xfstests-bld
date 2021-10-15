@@ -5,7 +5,7 @@
 SAVE_ARGS=("$@")
 
 SUITE=buster
-MIRROR=http://mirrors.kernel.org/debian
+MIRROR=http://debian.uchicago.edu/debian/
 DIR=$(pwd)
 ROOTDIR=$DIR/rootdir
 RAW_ROOT_FS=$DIR/root_fs.raw
