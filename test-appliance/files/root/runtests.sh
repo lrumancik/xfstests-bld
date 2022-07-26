@@ -37,6 +37,39 @@ function copy_xunit_results()
     fi
 }
 
+function format_xunit_after_reboot()
+{
+    local last_test="$1"
+
+    local REPORT="$(ls /var/tmp/*report.xunit.global.xml)"
+    local RESULT="$RESULT_BASE/result.xml"
+
+    # similar to xfstests/common/report:xunit_make_section_report
+    # Header
+    local date_time=$(date +"%F %T")
+    local timestamp="timestamp=\"${date_time/ /T}\""
+    local host="hostname=\"$(hostname)\""
+
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > "$RESULT"
+    echo "<testsuite name=\"xfstests\" $host $timestamp >" >> "$RESULT"
+
+    # properties will be populated by copy_xunit_results but if there
+    # is not an existing properties section, the properties will end
+    # up in the middle or end of the testsuite
+    echo "<properties>"  >> "$RESULT"
+    echo "</properties>" >> "$RESULT"
+
+    cat "$REPORT" >> "$RESULT"
+
+    echo "</testsuite>" >> "$RESULT"
+
+    # add entry for crashed test,
+    # also populates the statistics so we don't need to add them above
+    add_error_xunit "$RESULT" "$last_test" "xfstests.global"
+
+    rm "$REPORT"
+}
+
 # check to see if a device is assigned to be used
 function is_dev_free() {
     local device="$1"
@@ -580,8 +613,14 @@ do
 	    if test -n "$RUN_ONCE" ; then
 		if test -f "$RESULT_BASE/completed"
 		then
-		    head -n -2 "$RESULT_BASE/completed" > /tmp/completed
-		    mv /tmp/completed "$RESULT_BASE/completed"
+		    last_test="$(tail -n 1 "$RESULT_BASE/completed")"
+		    format_xunit_after_reboot "$last_test"
+		    copy_xunit_results
+
+		    # this was part of the in-progress preemption work,
+		    # removing for now as it conflicts with the crash recovery stuff
+		    # head -n -2 "$RESULT_BASE/completed" > /tmp/completed
+		    # mv /tmp/completed "$RESULT_BASE/completed"
 		else
 		    touch "$RESULT_BASE/completed"
 		fi

@@ -202,17 +202,14 @@ func (shard *ShardWorker) monitor() {
 		}
 
 		if time.Since(shard.vmtestStart) > monitorTimeout {
-			if !shard.sharder.keepDeadVM {
-				shard.shutdownOnTimeout(instanceInfo.Metadata)
+			log.Debug("Resetting VM")
+			err := shard.sharder.gce.ResetVM(shard.sharder.projID, shard.zone, shard.name)
+			if err != nil {
+				log.Errorf("Failed to reset %s", shard.name)
+				shard.vmStatus = "failed to reset after timeout"
+				shard.testResult = server.Error
+				return
 			}
-			shard.vmStatus = "timeout on one test"
-			shard.testResult = server.Hang
-
-			log.WithFields(logrus.Fields{
-				"status": shard.vmStatus,
-				"start":  shard.vmtestStart.Format(time.Stamp),
-			}).Errorf("Instance seems to have wedged, no status update for %s", monitorTimeout.Round(time.Minute))
-			return
 		}
 
 		log.WithFields(logrus.Fields{
