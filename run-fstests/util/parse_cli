@@ -226,6 +226,7 @@ validate_branch_name()
 shortopts="ac:C:g:hI:m:n:No:O:r:vx:X:"
 longopts=(
 aio:
+arch:
 archive
 bisect-bad:
 bisect-good:
@@ -385,6 +386,20 @@ while (( $# >= 1 )); do
 	    else
 		FSTESTEXC="$1"
 	    fi
+	    ;;
+	--arch) shift
+	    case "$1" in
+	    x86-64|x86_64|amd64)
+		ARCH="amd64"
+		;;
+	    arm64)
+		ARCH="arm64"
+		;;
+	    *)
+		echo "Architecture $ARCH not supported"
+		exit 1
+		;;
+	    esac
 	    ;;
 	--blktests)
 	    supported_flavors kvm gce

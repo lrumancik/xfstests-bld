@@ -11,6 +11,7 @@ OUT_TAR=
 BUILD_ENV=
 SUDO_ENV=sudo
 DO_GCE=
+ARCH=amd64
 
 if test -f config.custom ; then
     . config.custom
@@ -92,6 +93,36 @@ if $UPDATE && [ "$OUT_TAR" = "yes" ]; then
     exit 1
 fi
 
+CHROOT=$(sed -n "s/.*-c\s\+\(.*\)\s\+.*/\1/p" <<< "$BUILD_ENV")
+
+if test ! "$CHROOT"; then
+	echo "Warning: failed to detect chroot name"
+fi
+
+# TODO: this will break if not using the default of description formatting
+# SCHROOT_CHROOT_D=/etc/schroot/chroot.d in setup-buildchroot
+ARCH=$(sed -n "s/^description=.*(\(.*\))$/\1/p" \
+	/etc/schroot/chroot.d/$CHROOT)
+
+if test -n "$ARCH"; then
+	echo "Detected architecture of chroot as $ARCH"
+else
+	echo "Warning: failed to detect architecture of chroot,"
+	echo "using default architecture of $ARCH"
+fi
+
+case "$ARCH" in
+    x86-64|x86_64|amd64)
+	ARCH="amd64"
+	;;
+    arm64)
+	;;
+    *)
+	echo "Architecture $ARCH not supported"
+	exit 1
+	;;
+esac
+
 cd fstests-bld
 
 if $UPDATE; then
@@ -109,7 +140,7 @@ esac
 
 cd ../run-fstests
 if test -n "$DO_GCE"; then
-    ./gce-xfstests create-image >& /tmp/gce-xfstests-create.$$ &
+    ./gce-xfstests create-image --arch=$ARCH >& /tmp/gce-xfstests-create.$$ &
 fi
 
 cd ../test-appliance
