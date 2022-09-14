@@ -16,15 +16,33 @@ then
 fi
 
 . "$DIR/util/get-config"
+. "$DIR/util/gce-helper-funcs"
 
-case $1 in
-    --image-project) shift
-    GCE_IMAGE_PROJECT="$1"
-    shift ;;
-esac
+while (( $# >= 1 )); do
+    case $1 in
+	--image-project) shift
+	    GCE_IMAGE_PROJECT="$1"
+	    ;;
+	--arch) shift
+	    ARCH="$1"
+	    ;;
+	*)
+	    echo "Invalid option \"$1\""
+	    shift
+	    ;;
+    esac
+    shift
+done
 
-if [ -z "$GCE_IMAGE_PROJECT" ]; then
+get_arch "$ARCH"
+
+if test -z "$GCE_IMAGE_PROJECT" ; then
     GCE_IMAGE_PROJECT="xfstests-cloud"
+fi
+
+if test -n "$USING_DEFAULT_FAMILY" ; then
+    ROOT_FS="xfstests-$ARCH"
+    IMAGE_FLAG="--image-family"
 fi
 
 INSTANCE="xfstests-ltm"
@@ -61,8 +79,15 @@ then
     exit 1
 fi
 
-if [ -z "$GCE_LTM_MACHTYPE" ]; then
-	GCE_LTM_MACHTYPE="e2-small"
+if test -z "$GCE_LTM_MACHTYPE" ; then
+    case "$ARCH" in
+	amd64)
+	    GCE_LTM_MACHTYPE="e2-small"
+	    ;;
+	arm64)
+	    GCE_LTM_MACHTYPE="t2a-standard-1"
+	    ;;
+    esac
 fi
 
 GS_RW=https://www.googleapis.com/auth/devstorage.read_write

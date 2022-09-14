@@ -16,15 +16,33 @@ then
 fi
 
 . "$DIR/util/get-config"
+. "$DIR/util/gce-helper-funcs"
 
-case $1 in
-    --image-project) shift
-    GCE_IMAGE_PROJECT="$1"
-    shift ;;
-esac
+while (( $# >= 1 )); do
+    case $1 in
+	--image-project) shift
+	    GCE_IMAGE_PROJECT="$1"
+	    ;;
+	--arch) shift
+	    ARCH="$1"
+	    ;;
+	*)
+	    echo "Invalid option \"$1\""
+	    shift
+	    ;;
+    esac
+    shift
+done
 
-if [ -z "$GCE_IMAGE_PROJECT" ]; then
+get_arch "$ARCH"
+
+if test -z "$GCE_IMAGE_PROJECT" ; then
     GCE_IMAGE_PROJECT="xfstests-cloud"
+fi
+
+if test -n "$USING_DEFAULT_FAMILY" ; then
+    ROOT_FS="xfstests-$ARCH"
+    IMAGE_FLAG="--image-family"
 fi
 
 INSTANCE="xfstests-kcs"
@@ -35,9 +53,19 @@ if test -f "$DIR/.kcs_cookie_$GCE_PROJECT"; then
 fi
 
 NO_ACTION=
-if run_gcloud compute instances describe --zone $GCE_ZONE \
-    $INSTANCE >& /dev/null
+
+DESCRIBE=$(run_gcloud_always compute instances describe \
+    --zone $GCE_ZONE $INSTANCE 2> /dev/null)
+if test -n "$DESCRIBE"
 then
+    KCS_ARCH=$(echo "$DESCRIBE" | sed -rn 's/.*architecture: (.*)/\1/p' )
+
+    if test "$KCS_ARCH" != "$GCE_ARCH"; then
+	echo "KCS server is already running on $KCS_ARCH instance but $ARCH requested."
+	echo "Please delete the KCS instance and try again."
+	exit 1
+    fi
+
     if [ -f $DIR/.kcs_instance_$GCE_PROJECT ]
     then
 	echo "The KCS instance already exists!"
@@ -60,8 +88,15 @@ then
     exit 1
 fi
 
-if [ -z "$GCE_KCS_MACHTYPE" ]; then
-	GCE_KCS_MACHTYPE="n2-standard-4"
+if test -z "$GCE_KCS_MACHTYPE" ; then
+    case "$ARCH" in
+	amd64)
+	    GCE_KCS_MACHTYPE="n2-standard-4"
+	    ;;
+	arm64)
+	    GCE_KCS_MACHTYPE="t2a-standard-4"
+	    ;;
+    esac
 fi
 
 GS_RW=https://www.googleapis.com/auth/devstorage.read_write
