@@ -17,7 +17,7 @@ if test -f config.custom ; then
 else
     . config
 fi
-
+echo "MIRROR=$MIRROR"
 usage()
 {
     cat <<EOF

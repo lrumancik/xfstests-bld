@@ -7,9 +7,10 @@ unset TMP TEMP TMPDIR || true
 
 MIRROR=https://mirrors.kernel.org/debian
 
-if test -r config.custom ; then
-   . $(pwd)/config.custom
+if test -r ../config.custom ; then
+   . $(pwd)/../config.custom
 fi
+echo "MIRROR=$MIRROR"
 
 DEBOOTSTRAP_DIR=/usr/share/debootstrap
 SUITE="$1-backports"

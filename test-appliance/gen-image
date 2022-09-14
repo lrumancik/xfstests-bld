@@ -33,9 +33,11 @@ if test -f ../fstests-bld/xfstests/build-distro ; then
     fi
 fi
 
-if test -r config.custom ; then
-   . $(pwd)/config.custom
+if test -r ../config.custom ; then
+   . $(pwd)/../config.custom
 fi
+
+echo "MIRROR=$MIRROR"
 
 while [ "$1" != "" ]; do
   case $1 in

@@ -13,8 +13,8 @@ fi
 
 cd "$(dirname $DIR)/test-appliance"
 
-if test -r config.custom ; then
-   . ./config.custom
+if test -r ../config.custom ; then
+   . ../config.custom
 fi
 
 if test -z "$GS_BUCKET" -o -z "$GCE_PROJECT" -o -z "$GCE_ZONE"
