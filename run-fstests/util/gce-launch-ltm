@@ -23,6 +23,16 @@ while (( $# >= 1 )); do
 	--image-project) shift
 	    GCE_IMAGE_PROJECT="$1"
 	    ;;
+	--image-family) shift
+	    ROOT_FS="$1"
+	    IMAGE_FLAG="--image-family"
+	    unset USING_DEFAULT_FAMILY
+	    ;;
+	-I) shift
+	    ROOT_FS="$1"
+	    IMAGE_FLAG="--image"
+	    unset USING_DEFAULT_FAMILY
+	    ;;
 	--arch) shift
 	    ARCH="$1"
 	    ;;
@@ -96,8 +106,6 @@ COMPUTE_RW=https://www.googleapis.com/auth/compute
 SCOPES="$GS_RW,$COMPUTE_RW,$LOG_WR"
 
 PREEMPTIBLE="--maintenance-policy MIGRATE"
-ROOT_FS="xfstests"
-IMAGE_FLAG="--image-family"
 
 ARG="gs_bucket=$GS_BUCKET serial-port-enable=$GCE_SERIAL_PORT_ACCESS"
 ARG="$ARG gce_xfs_ltm=YES"
