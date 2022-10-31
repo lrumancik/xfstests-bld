@@ -491,6 +491,8 @@ case "$1" in
 	    exit 1
 	fi
 	export GCE_PROJECT
+#	export GS_BUCKET
+#	export GCE_ZONE
 	export GCE_XFSTESTS_DIR="$DIR"
 	XFSTESTS_FLAVOR=$XFSTESTS_FLAVOR "$DIR/../test-appliance/gce-create-image" "$@"
 	exit $?

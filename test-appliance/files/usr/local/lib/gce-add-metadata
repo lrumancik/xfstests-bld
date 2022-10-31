@@ -7,4 +7,9 @@ then
 fi
 
 flock /run/xattr.lock gcloud compute instances -q add-metadata \
-      --zone $ZONE $(hostname) --metadata "^##^$@" >& /dev/null
+      --zone $ZONE $(hostname) --metadata "^##^$@" >> /results/gce-add-metadata-output 2>&1
+
+
+gcloud compute instances describe --zone $ZONE $(hostname) >> /results/gce-add-metadata-output 2>&1
+
+gcloud auth list >> /results/gce-add-metadata-output 2>&1

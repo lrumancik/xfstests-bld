@@ -28,5 +28,5 @@ for tc in input:
 
 merge.update_statistics()
 merge.write(args.merge_file + '.new')
-os.rename(args.merge_file, args.merge_file + '.bak')
+os.rename(args.merge_file, args.merge_file + '.merge.' + str(os.getpid())+ '.bak')
 os.rename(args.merge_file + '.new' , args.merge_file)

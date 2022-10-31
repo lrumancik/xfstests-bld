@@ -142,5 +142,5 @@ if test -n "$DO_GCE"; then
     tail -n +1 -f /tmp/gce-xfstests-create.$$ &
     wait %./gce-xfstests
     kill %tail
-    rm -f /tmp/gce-xfstests-create.$$
+#    rm -f /tmp/gce-xfstests-create.$$
 fi

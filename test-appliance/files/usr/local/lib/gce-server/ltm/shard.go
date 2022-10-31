@@ -180,7 +180,9 @@ func (shard *ShardWorker) monitor() {
 
 		for _, metaData := range instanceInfo.Metadata.Items {
 			if metaData.Key == "status" {
+				log.Error("Matched status")
 				if *metaData.Value != shard.vmStatus {
+					log.Error("updating vmStatus")
 					shard.vmStatus = *metaData.Value
 					shard.vmtestStart = time.Now()
 					break

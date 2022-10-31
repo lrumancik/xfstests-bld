@@ -57,7 +57,6 @@ fi
 
 run_hooks pre-setup
 
-/usr/local/lib/gce-logger disk setup
 echo "$ORIG_CMDLINE" | base64 -d > /var/www/cmdline
 
 if test "$CMD" = "pts" ; then

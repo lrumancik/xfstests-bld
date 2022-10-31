@@ -85,6 +85,8 @@ then
 	CREATE_FLAG="--zone $ZONE"
     fi
 
+    gcloud compute instances describe ${instance} --zone "$ZONE"
+
     gcloud compute -q disks create "$SCRATCH_DSK" \
 	--size "${SIZE}" --type "${TYPE}" $CREATE_FLAG
     gcloud compute -q instances attach-disk ${instance} \

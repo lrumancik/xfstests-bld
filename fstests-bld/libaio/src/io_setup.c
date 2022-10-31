@@ -20,4 +20,15 @@
 #include <libaio.h>
 #include "syscall.h"
 
-io_syscall2(int, io_setup, io_setup, int, maxevents, io_context_t *, ctxp)
+io_syscall2(int, io_setup_real, io_setup, int, maxevents, io_context_t *, ctxp)
+
+int io_setup(int maxevents, io_context_t *ctxp)
+{
+        int ret, old_errno = errno;
+
+        errno = 0;
+        ret = io_setup_real(maxevents, ctxp);
+        printf("io_setup returns %d, errno %d, old errno was %d\n", ret,
+               errno, old_errno);
+        return ret;
+}
