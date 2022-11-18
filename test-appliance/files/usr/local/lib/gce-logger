@@ -9,12 +9,25 @@ fi
 status=$(echo "$*" | sed -e 's/^run xfstest //')
 if echo "$*" | grep -q "^run xfstest "
 then
+    # /root/xfstests/bin/syncfs $RESULT_BASE/completed
+    # /root/xfstests/bin/syncfs /var/tmp
+
+    # sync completed file
     echo "$status" >> $RESULT_BASE/completed
-    /root/xfstests/bin/syncfs $RESULT_BASE/completed
-    echo "syncfs completed returned $?" >> /results/status-append
+    /root/xfstests/bin/xfs_io -c "fsync" $RESULT_BASE/completed
+    echo "xfs_io fsync completed returned $?" >> /results/status-append
+
+    # sync completed file's dir in case it this file was just created
+    /root/xfstests/bin/xfs_io -c "fsync" $RESULT_BASE
+    echo "xfs_io fsync RESULT_BASE returned $?" >> /results/status-append
     cat "$RESULT_BASE/completed" >> /results/status-append
-    /root/xfstests/bin/syncfs /var/tmp
-    echo "syncfs /var/tmp returned $?" >> /results/status-append
+
+    # sync temporary results file
+    ls /var/tmp/*report.xunit.global.xml 2>/dev/null | xargs -r /root/xfstests/bin/xfs_io -c "fsync"
+
+    # sync temporary results file's dir
+    /root/xfstests/bin/xfs_io -c "fsync" /var/tmp
+    echo "xfs_io fsync /var/tmp returned $?" >> /results/status-append
 fi
 
 if test -f /run/fstest-config

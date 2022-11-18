@@ -35,6 +35,9 @@ function copy_xunit_results()
 	fi
 	rm "$RESULT"
     fi
+    /root/xfstests/bin/xfs_io -c "fsync" $RESULT
+    /root/xfstests/bin/xfs_io -c "fsync" $RESULTS
+    /root/xfstests/bin/xfs_io -c "fsync" $RESULT_BASE
 }
 
 function format_xunit_after_reboot()
@@ -616,7 +619,6 @@ do
 		    last_test="$(tail -n 1 "$RESULT_BASE/completed")"
 		    format_xunit_after_reboot "$last_test"
 		    copy_xunit_results
-
 		    # this was part of the in-progress preemption work,
 		    # removing for now as it conflicts with the crash recovery stuff
 		    # head -n -2 "$RESULT_BASE/completed" > /tmp/completed
