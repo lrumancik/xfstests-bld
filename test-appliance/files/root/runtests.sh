@@ -47,6 +47,8 @@ function format_xunit_after_reboot()
     local REPORT="$(ls /var/tmp/*report.xunit.global.xml)"
     local RESULT="$RESULT_BASE/result.xml"
 
+    echo "processing report $REPORT" >> $RESULT_BASE/status-append
+
     # similar to xfstests/common/report:xunit_make_section_report
     # Header
     local date_time=$(date +"%F %T")
@@ -70,7 +72,9 @@ function format_xunit_after_reboot()
     # also populates the statistics so we don't need to add them above
     add_error_xunit "$RESULT" "$last_test" "xfstests.global"
 
+    # leave fsyinc'ing of RESULT and RESULT_BASE to copy
     rm "$REPORT"
+#    /root/xfstests/bin/xfs_io -c "fsync" /var/tmp
 }
 
 # check to see if a device is assigned to be used
