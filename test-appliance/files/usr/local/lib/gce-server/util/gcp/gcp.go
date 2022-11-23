@@ -91,7 +91,10 @@ func (gce *Service) GetInstanceInfo(projID string, zone string, instance string)
 
 // SetMetadata sets the metadata for an instance.
 func (gce *Service) SetMetadata(projID string, zone string, instance string, metadata *compute.Metadata) error {
+	// grab metadata lock
+	// update fingerprint
 	_, err := gce.service.Instances.SetMetadata(projID, zone, instance, metadata).Context(gce.ctx).Do()
+	// release metadata lock
 	return err
 }
 

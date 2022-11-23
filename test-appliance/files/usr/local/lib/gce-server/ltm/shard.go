@@ -38,6 +38,7 @@ type ShardWorker struct {
 	vmStatus    string
 	vmtestStart time.Time
 	testResult  server.ResultType
+	vmReset     bool
 
 	log                *logrus.Entry
 	logPath            string
@@ -48,9 +49,10 @@ type ShardWorker struct {
 }
 
 const (
-	monitorTimeout  = 1 * time.Hour
+	monitorTimeout  = 10 * time.Minute
 	noStatusTimeout = 5 * time.Minute
 	monitorInterval = 60 * time.Second
+	resetTimeout    = 10 * time.Minute
 	gsInterval      = 10 * time.Second
 	maxAttempts     = 5
 )
@@ -70,6 +72,7 @@ func NewShardWorker(sharder *ShardScheduler, shardID string, config string, zone
 		vmStatus:    "waiting for launch",
 		vmtestStart: time.Now(),
 		testResult:  server.DefaultResult,
+		vmReset:     false,
 
 		log:                sharder.log.WithField("shardID", shardID),
 		logPath:            logPath,
@@ -185,6 +188,7 @@ func (shard *ShardWorker) monitor() {
 					log.Error("updating vmStatus")
 					shard.vmStatus = *metaData.Value
 					shard.vmtestStart = time.Now()
+					shard.vmReset = false
 					break
 				}
 			}
@@ -203,7 +207,13 @@ func (shard *ShardWorker) monitor() {
 			log.Debug("waiting to get test status metadata")
 		}
 
-		if time.Since(shard.vmtestStart) > monitorTimeout {
+
+		if shard.vmReset && time.Since(shard.vmtestStart) > resetTimeout {
+			log.Errorf("VM did not come back online after reset, exiting");
+			return
+		}
+
+		if time.Since(shard.vmtestStart) > monitorTimeout && ! shard.vmReset {
 			log.Debug("Resetting VM")
 			err := shard.sharder.gce.ResetVM(shard.sharder.projID, shard.zone, shard.name)
 			if err != nil {
@@ -212,6 +222,8 @@ func (shard *ShardWorker) monitor() {
 				shard.testResult = server.Error
 				return
 			}
+			shard.vmReset = true
+			shard.vmtestStart = time.Now()
 		}
 
 		log.WithFields(logrus.Fields{

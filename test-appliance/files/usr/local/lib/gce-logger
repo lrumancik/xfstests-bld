@@ -28,6 +28,8 @@ then
     # sync temporary results file's dir
     /root/xfstests/bin/xfs_io -c "fsync" /var/tmp
     echo "xfs_io fsync /var/tmp returned $?" >> /results/status-append
+
+    /root/xfstests/bin/xfs_io -c "fsync" /results/status-append
 fi
 
 if test -f /run/fstest-config

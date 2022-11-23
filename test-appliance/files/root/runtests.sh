@@ -7,6 +7,7 @@ API_MINOR=5
 
 RESULTS=/results
 RUNSTATS="$RESULTS/run-stats"
+echo "START RUNTESTS.SH" >> /results/more-stuff
 
 function gce_run_hooks()
 {
@@ -21,6 +22,7 @@ function copy_xunit_results()
     local RESULT="$RESULT_BASE/result.xml"
     local RESULTS="$RESULT_BASE/results.xml"
 
+    echo "copy_xunit_results" >> /results/more-stuff
     if test -f "$RESULT"
     then
 	if test -f "$RESULTS"
@@ -35,7 +37,6 @@ function copy_xunit_results()
 	fi
 	rm "$RESULT"
     fi
-    /root/xfstests/bin/xfs_io -c "fsync" $RESULT
     /root/xfstests/bin/xfs_io -c "fsync" $RESULTS
     /root/xfstests/bin/xfs_io -c "fsync" $RESULT_BASE
 }
@@ -44,11 +45,14 @@ function format_xunit_after_reboot()
 {
     local last_test="$1"
 
+    echo "format_xunint_after_reboot" >> /results/more-stuff
+    ls -la /var/tmp >> /results/more-stuff
+
     local REPORT="$(ls /var/tmp/*report.xunit.global.xml)"
     local RESULT="$RESULT_BASE/result.xml"
 
-    echo "processing report $REPORT" >> $RESULT_BASE/status-append
-
+    echo "processing report $REPORT" >> /results/more-stuff
+    /root/xfstests/bin/xfs_io -c "fsync" /results/more-stuff
     # similar to xfstests/common/report:xunit_make_section_report
     # Header
     local date_time=$(date +"%F %T")
@@ -73,8 +77,8 @@ function format_xunit_after_reboot()
     add_error_xunit "$RESULT" "$last_test" "xfstests.global"
 
     # leave fsyinc'ing of RESULT and RESULT_BASE to copy
+    # gce-logger syncs /var/tmp
     rm "$REPORT"
-#    /root/xfstests/bin/xfs_io -c "fsync" /var/tmp
 }
 
 # check to see if a device is assigned to be used
@@ -620,7 +624,13 @@ do
 	    if test -n "$RUN_ONCE" ; then
 		if test -f "$RESULT_BASE/completed"
 		then
+		    # why does 010 make it here sometimes???
+		    echo "after crash" >> /results/more-stuff
+		    echo "----------completed file-----" >> /results/more-stuff
+		    cat $RESULT_BASE/completed >> /results/more-stuff
+		    echo "--------------------------------" >> /results/more-stuff
 		    last_test="$(tail -n 1 "$RESULT_BASE/completed")"
+		    echo "last test=$last_test" >> /results/more-stuff
 		    format_xunit_after_reboot "$last_test"
 		    copy_xunit_results
 		    # this was part of the in-progress preemption work,
@@ -633,6 +643,8 @@ do
 		sort "$RESULT_BASE/completed" > /tmp/completed
 		comm -23 "$RESULT_BASE/tests-to-run" /tmp/completed \
 		     > /tmp/tests-to-run
+		echo "----------tests-to-run-----------" >> /results/more-stuff
+		cat /tmp/tests-to-run >> /results/more-stuff
 	    else
 		cp "$RESULT_BASE/tests-to-run" /tmp/tests-to-run
 	    fi
