@@ -2,7 +2,8 @@
 Description=GCE finalization timer
 
 [Timer]
-OnBootSec=23h 45m
+#OnBootSec=23h 45m
+OnBootSec=5d
 Unit=gce-finalize.service
 
 [Install]
